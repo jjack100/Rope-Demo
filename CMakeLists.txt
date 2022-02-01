@@ -1,6 +1,6 @@
 cmake_minimum_required( VERSION 3.17 )
 
-project( test )
+project( Rope-Demo )
 
 #GLFW
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)

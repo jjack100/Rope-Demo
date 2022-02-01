@@ -89,7 +89,7 @@ int main() {
 
 	point pivot = {0}; /* starting point of the chain */
 	segment segments[TOTAL_SEGMENTS] = {0};
-
+	segments[0].angVelocity = 0.5;
 	vertsFromChain(pivot, segments);
 
 	// Main loop
@@ -104,7 +104,9 @@ int main() {
 		glUseProgram(shaderProgram);
 		glBindVertexArray(VAO);
 
-		segments[0].angle += timeDiff * 0.5;
+		for (int i = 0; i < TOTAL_SEGMENTS; i++) {
+			segments[i].angle += segments[i].angVelocity * timeDiff;
+		}
 		vertsFromChain(pivot, segments);
 
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
