@@ -27,6 +27,8 @@ target_sources(${PROJECT_NAME}
     src/main.c
     src/shader.h
     src/shader.c
+    src/physmath.h
+    src/physmath.c
 )
 
 target_include_directories(${PROJECT_NAME}

@@ -2,13 +2,15 @@
 #include<GLFW/glfw3.h>
 #include<assert.h>
 #include<math.h>
+#include<stdio.h>
 
 #include "shader.h"
+#include "physmath.h"
 
 #define TOTAL_SEGMENTS (3)
 #define SEGMENT_LENGTH (0.2f)
 #define THICKNESS (0.01f)
-
+#define GRAVITY (-0.5) //In half-window-heights per second^2
 typedef struct point {
 	double x;
 	double y;
@@ -66,7 +68,7 @@ int main() {
 
 	gladLoadGL();
 	glViewport(0, 0, 800, 800);
-
+	
 	GLuint shaderProgram = 0;
 	buildShaderProgram( &shaderProgram );
 
@@ -89,7 +91,7 @@ int main() {
 
 	point pivot = {0}; /* starting point of the chain */
 	segment segments[TOTAL_SEGMENTS] = {0};
-	segments[0].angVelocity = 0.5;
+	segments[0].angle = M_PI * (3. / 4.);
 	vertsFromChain(pivot, segments);
 
 	// Main loop
@@ -103,7 +105,8 @@ int main() {
 		glClear(GL_COLOR_BUFFER_BIT);
 		glUseProgram(shaderProgram);
 		glBindVertexArray(VAO);
-
+		
+		segments[0].angVelocity += (GRAVITY / SEGMENT_LENGTH) *sin(segments[0].angle) * 0.2;
 		for (int i = 0; i < TOTAL_SEGMENTS; i++) {
 			segments[i].angle += segments[i].angVelocity * timeDiff;
 		}

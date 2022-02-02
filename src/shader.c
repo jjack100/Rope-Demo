@@ -1,6 +1,8 @@
 #include<glad/glad.h>
 #include<GLFW/glfw3.h>
 
+#include "shader.h"
+
 // Vertex Shader source code
 const char* vertexShaderSource = "#version 330 core\n"
 "layout (location = 0) in vec3 aPos;\n"
