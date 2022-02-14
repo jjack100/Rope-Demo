@@ -3,14 +3,15 @@
 #include<assert.h>
 #include<math.h>
 #include<stdio.h>
+#include<stdlib.h>
 
 #include "shader.h"
 #include "physmath.h"
 
-#define TOTAL_SEGMENTS (3)
-#define SEGMENT_LENGTH (0.2f)
+#define TOTAL_SEGMENTS (2)
+#define SEGMENT_LENGTH (0.4f)
 #define THICKNESS (0.01f)
-#define GRAVITY (-0.5) //In half-window-heights per second^2
+#define GRAVITY (0.6) //In half-window-heights per second^2
 typedef struct point {
 	double x;
 	double y;
@@ -19,6 +20,7 @@ typedef struct point {
 typedef struct segment {
 	double angle; /*Angle in radians from the vertical, ranging -pi to pi*/
 	double angVelocity; /*Angular velocity*/
+	double mass;
 } segment;
 
 // Vertex coordinates
@@ -51,6 +53,22 @@ void vertsFromChain (point pivot, segment *segments) {
 }
 
 int main() {
+	double *a = malloc(sizeof(double));
+	double b = 3;
+	expression *expr = malloc(sizeof(expression));
+	expr->type = POWER;
+	expr->value.operands[0] = malloc(sizeof(expression));
+	expr->value.operands[1] = malloc(sizeof(expression));
+	expr->value.operands[0]->type = VAR;
+	expr->value.operands[0]->value.variable = a;
+	expr->value.operands[1]->type = CONST;
+	expr->value.operands[1]->value.constant = b;
+
+	*a = 4;
+	expression *deriv = differentiate(expr, a);
+	printf("%.2f\n", evaluate(deriv));
+
+
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -91,7 +109,10 @@ int main() {
 
 	point pivot = {0}; /* starting point of the chain */
 	segment segments[TOTAL_SEGMENTS] = {0};
-	segments[0].angle = M_PI * (3. / 4.);
+	segments[0].angle = M_PI * (3./4.);
+	segments[1].angle = M_PI * (3./4.);
+	segments[0].mass = 1;
+	segments[1].mass = 1;
 	vertsFromChain(pivot, segments);
 
 	// Main loop
@@ -105,11 +126,23 @@ int main() {
 		glClear(GL_COLOR_BUFFER_BIT);
 		glUseProgram(shaderProgram);
 		glBindVertexArray(VAO);
-		
-		segments[0].angVelocity += (GRAVITY / SEGMENT_LENGTH) *sin(segments[0].angle) * 0.2;
+	
+		double m1 = segments[0].mass;
+		double m2 = segments[1].mass;
+		double a1 = segments[0].angle;
+		double a2 = segments[1].angle;
+		double v1 = segments[0].angVelocity;
+		double v2 = segments[1].angVelocity;
+		double l = SEGMENT_LENGTH;
+
+		double mat[2][3] = {(m1 + m2) * l, m2 * l * cos(a1 - a2), -m2*l*v2*v2*sin(a1-a2) - (m1+m2)*GRAVITY*sin(a1),
+				    m2 * l * cos(a1 - a2), m2 * l, + m2*l*v1*v1*sin(a1-a2) - m2*GRAVITY*sin(a2)};
+		gaussElim(2, mat);
 		for (int i = 0; i < TOTAL_SEGMENTS; i++) {
+			segments[i].angVelocity += mat[i][TOTAL_SEGMENTS] * timeDiff;
 			segments[i].angle += segments[i].angVelocity * timeDiff;
 		}
+
 		vertsFromChain(pivot, segments);
 
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
